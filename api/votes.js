@@ -3,8 +3,10 @@
 // POST /api/votes { fight, side, voter }  side = "a" | "b" | null (null = take the vote back)
 // One vote per browser: `voter` is a random id the page keeps in localStorage.
 
-const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+// The storage integration names its variables after a prefix; accept the usual names, then any *_REST_API_URL / *_REST_API_TOKEN pair.
+const envFind = suffix => Object.keys(process.env).find(k => k.endsWith(suffix) && !k.includes("READ_ONLY"));
+const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || process.env[envFind("_REST_API_URL")];
+const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env[envFind("_REST_API_TOKEN")];
 const FIGHT_RE = /^[a-z0-9-]{3,60}$/;
 const VOTER_RE = /^[a-zA-Z0-9-]{16,64}$/;
 
