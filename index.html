@@ -479,6 +479,9 @@ section[data-view]:not(.hero) > .sh:first-child { margin-top: 24px; }
 .rg-intro { margin: -4px 0 14px; font-size: 13.5px; color: #c4c8d4; line-height: 1.7; }
 .rg-intro b { color: #f6cf62; }
 .rg-intro span { color: #e8d9b0; font-weight: 700; }
+a.cls-l { color: inherit; text-decoration: underline; text-decoration-color: rgba(243,195,79,.55); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a.cls-l:hover { color: #f6cf62; }
+a.cls-l:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 2px; }
 .rg-about { margin: -4px 0 16px; background: var(--panel); border: 1px solid rgba(243,195,79,.28); border-radius: 6px; overflow: hidden; }
 .rg-about summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 700; color: #e8d9b0; background: radial-gradient(120% 140% at 100% 0%, rgba(243,195,79,.12), transparent 60%), var(--panel-2); }
 .rg-about summary::-webkit-details-marker { display: none; }
@@ -802,6 +805,15 @@ const coOf = n => (DETAIL[n] && DETAIL[n].co) || (PEOPLE.get(n) || {}).co || "";
 const isJp = n => coOf(n) === "日本";
 const known = n => PEOPLE.has(n) || !!DETAIL[n];
 const linkName = (n, label) => known(n) ? `<a href="#${pidOf(n)}">${esc(label || n)}</a>` : esc(label || n);
+// weight-class names anywhere in a text become links to that class's ranking (#r-<id>)
+const CLS_OF = new Map(); let CLS_RE = null;
+function buildClsIndex() {
+  DATA.rankings.classes.forEach(c => { CLS_OF.set(c.n, c.id); CLS_OF.set(c.short + "級", c.id); });
+  const keys = [...CLS_OF.keys()].sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  CLS_RE = new RegExp(keys.join("|"), "g");
+}
+const clsA = (id, label) => `<a class="cls-l" href="#r-${id}">${esc(label)}</a>`;
+const linkCls = t => CLS_RE ? esc(t).replace(CLS_RE, m => clsA(CLS_OF.get(m), m)) : esc(t);
 const shortName = n => n.includes("・") ? n.split("・").pop() : n;
 
 /* ---------- bout card (hero + compare) ---------- */
@@ -861,7 +873,7 @@ function boutCard(a, b, o) {
       ${o.title || (o.belts && o.belts.length) ? `
       <div class="bt-title">
         ${o.belts && o.belts.length ? `<div class="bt-belts">${o.belts.map(x => `<span class="belt">${esc(x)}</span>`).join("")}</div>` : ""}
-        ${o.title ? `<span>${esc(o.title)}</span>` : ""}
+        ${o.title ? `<span>${linkCls(o.title)}</span>` : ""}
       </div>` : ""}
       ${rows.length ? `<div class="bt-tape" aria-label="2人の比較">${rows.join("")}</div>` : ""}
       ${o.date || o.venue || o.foot ? `
@@ -882,7 +894,7 @@ function schedItem(s, opts = {}) {
     <div class="sd"><small>${MON[Number(m) - 1]}</small><b>${d ? Number(d) : "–"}</b>${s.d.length === 7 ? `<small class="sd-y">${y}</small>` : ""}</div>
     <div class="sm">
       <b>${linkName(s.a)} vs ${linkName(s.b)}</b>
-      <span>${esc(s.title)}</span>
+      <span>${linkCls(s.title)}</span>
       ${opts.compact ? "" : `<span class="sc-where">${s.time ? `${esc(s.time)}〜 · ` : ""}${esc(s.where)}${s.local ? " · 現地日付" : ""}</span>`}
       <div class="sc-tags">
         ${s.tv.length ? s.tv.map(t => `<i class="tv">${esc(t)}</i>`).join("") : `<i class="tv none">配信未定</i>`}
@@ -988,10 +1000,10 @@ function renderFollowStrip() {
 function renderHome() {
   const h = DATA.hero;
   $("heroCard").innerHTML = boutCard(h.a, h.b, { aShort: h.aShort, bShort: h.bShort, status: h.status, title: h.title, belts: h.belts, date: h.date, venue: h.venue, foot: h.foot });
-  $("lead").innerHTML = `<h1>${esc(DATA.headline.title)}</h1><p>${esc(DATA.headline.body)}</p>`;
+  $("lead").innerHTML = `<h1>${esc(DATA.headline.title)}</h1><p>${linkCls(DATA.headline.body)}</p>`;
   $("hmRes").innerHTML = DATA.results.slice(0, 4).map(r => {
     const w = r.win === "a" ? r.a : r.win === "b" ? r.b : null;
-    return `<li><span class="wl ${w ? "w" : "d"}">${w ? "W" : "D"}</span><div><b>${linkName(r.a)} vs ${linkName(r.b)}</b><small>${fmtDate(r.d).slice(5)} · ${esc(r.cls)} · ${w ? `${esc(shortName(w))}の${esc(r.m)}勝ち` : esc(r.m)}${r.note ? ` · ${esc(r.note)}` : ""}</small></div></li>`;
+    return `<li><span class="wl ${w ? "w" : "d"}">${w ? "W" : "D"}</span><div><b>${linkName(r.a)} vs ${linkName(r.b)}</b><small>${fmtDate(r.d).slice(5)} · ${linkCls(r.cls)} · ${w ? `${esc(shortName(w))}の${esc(r.m)}勝ち` : esc(r.m)}${r.note ? ` · ${esc(r.note)}` : ""}</small></div></li>`;
   }).join("");
   $("hmUp").innerHTML = upcoming().slice(0, 4).map(s => schedItem(s, { compact: true })).join("");
   $("hmFx").innerHTML = DATA.featured.filter(n => DETAIL[n]).map(n => {
@@ -1009,12 +1021,13 @@ function renderHome() {
   const kings = DATA.rankings.classes.filter(c => c.tbrb.c !== "空位").reverse();
   $("hmKings").innerHTML = kings.map(c => {
     const k = person(c.tbrb.c);
-    return `<li><a href="#rankings" data-cls="${c.id}"><small>${esc(c.n)}</small><b class="${k.co === "日本" ? "jp" : ""}">${esc(k.name)}</b><i>→</i></a></li>`;
+    return `<li><a href="#r-${c.id}"><small>${esc(c.n)}</small><b class="${k.co === "日本" ? "jp" : ""}">${esc(k.name)}</b><i>→</i></a></li>`;
   }).join("");
-  $("hmP4p").innerHTML = DATA.p4p.list.slice(0, 3).map((p, i) => `<li><span>${p.n}</span><b>${p.name === "井上尚弥" || isJp(p.name) ? `<i class="jp-dot" aria-label="日本人"></i>` : ""}${linkName(p.name)}</b><small>${esc(p.cls.split(" ")[0])}</small></li>`).join("");
+  $("hmP4p").innerHTML = DATA.p4p.list.slice(0, 3).map((p, i) => `<li><span>${p.n}</span><b>${p.name === "井上尚弥" || isJp(p.name) ? `<i class="jp-dot" aria-label="日本人"></i>` : ""}${linkName(p.name)}</b><small>${linkCls(p.cls.split(" ")[0])}</small></li>`).join("");
   renderFollowStrip();
 }
-document.addEventListener("click", e => { const a = e.target.closest("a[data-cls]"); if (a) { st.cls = a.dataset.cls; renderRank(); } });
+// a link to the class already shown does not fire hashchange, so route by hand
+document.addEventListener("click", e => { const a = e.target.closest('a[href^="#r-"]'); if (a && a.getAttribute("href") === location.hash) { e.preventDefault(); route(); } });
 
 /* ---------- fighters ---------- */
 function renderFxList() {
@@ -1096,7 +1109,7 @@ function renderPlayer(id) {
         ${D && D.nick ? `<div class="pl-nick">“${esc(D.nick)}”</div>` : ""}
         <h1 class="pl-name${jp ? " jp" : ""}">${esc(name).replace(/・/g, "・<wbr>")}</h1>
         <div class="pl-en">${D ? esc(D.en) + " · " : ""}${esc(P.co)}</div>
-        ${D && D.titleNote ? `<div class="pl-tn">${esc(D.titleNote)}</div>` : ""}
+        ${D && D.titleNote ? `<div class="pl-tn">${linkCls(D.titleNote)}</div>` : ""}
         ${rec ? `<div class="pl-rec">
           <div class="rec">${rec.w}-${rec.l}${rec.d ? `-${rec.d}` : ""}<small>${rec.w}勝${rec.l}敗${rec.d ? `${rec.d}分` : ""} · ${rec.ko}KO</small></div>
           <div class="ko"><div class="ko-l"><span>KO率</span><b>${koPct}%</b></div><div class="ko-track"><div class="ko-fill" style="width:${koPct}%"></div></div></div>
@@ -1112,10 +1125,10 @@ function renderPlayer(id) {
       </dl>` : ""}
       ${nf ? `<section class="pl-sec"><h2><b>NEXT FIGHT</b><span>決まっている次の試合</span></h2><ul class="sched">${schedItem(nf)}</ul></section>` : ""}
       ${ranks.length ? `<section class="pl-sec"><h2><b>RANKINGS</b><span>今のランキング</span></h2>
-        <ul class="pl-ranks">${ranks.map(r => `<li class="${r.pos.includes("王者") ? "ch" : ""}"><span class="pl-src">${r.src}</span><span>${esc(r.cls.n)}</span><b>${esc(r.pos)}</b></li>`).join("")}</ul></section>` : ""}
+        <ul class="pl-ranks">${ranks.map(r => `<li class="${r.pos.includes("王者") ? "ch" : ""}"><span class="pl-src">${r.src}</span>${clsA(r.cls.id, r.cls.n)}<b>${esc(r.pos)}</b></li>`).join("")}</ul></section>` : ""}
       ${D ? `
       <section class="pl-sec"><h2><b>NOW</b><span>今の状況と次戦</span></h2>
-        <p class="pl-p">${esc(D.now)}</p>
+        <p class="pl-p">${linkCls(D.now)}</p>
         <div class="pl-next">${D.next.map(n => `<div><i class="pill ${PILL[n.t] || "ghost"}">${esc(n.t)}</i><p>${esc(n.x)}</p></div>`).join("")}</div>
       </section>
       <section class="pl-sec"><h2><b>STYLE</b><span>ファイトスタイル</span></h2><p class="pl-p">${esc(D.style)}</p></section>
@@ -1182,9 +1195,10 @@ function renderRankSetup() {
   $("rgCls").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     st.cls = b.dataset.c; renderRank();
+    history.replaceState(null, "", "#r-" + st.cls);
     $("rgCard").scrollIntoView({ block: "start", behavior: reduced() ? "auto" : "smooth" });
   });
-  $("p4pList").innerHTML = DATA.p4p.list.map(p => `<li><span class="rk">${p.n}</span><span class="pn"><b>${isJp(p.name) ? `<i class="jp-dot" aria-label="日本人"></i>` : ""}${linkName(p.name)}</b><span>${esc(p.cls)}</span></span><span class="mv ${p.mv === "up" ? "up" : p.mv === "down" ? "down" : p.mv === "new" ? "new" : ""}">${p.mv === "up" ? "▲ UP" : p.mv === "down" ? "▼ DOWN" : p.mv === "new" ? "NEW" : "— 維持"}</span></li>`).join("");
+  $("p4pList").innerHTML = DATA.p4p.list.map(p => `<li><span class="rk">${p.n}</span><span class="pn"><b>${isJp(p.name) ? `<i class="jp-dot" aria-label="日本人"></i>` : ""}${linkName(p.name)}</b><span>${linkCls(p.cls)}</span></span><span class="mv ${p.mv === "up" ? "up" : p.mv === "down" ? "down" : p.mv === "new" ? "new" : ""}">${p.mv === "up" ? "▲ UP" : p.mv === "down" ? "▼ DOWN" : p.mv === "new" ? "NEW" : "— 維持"}</span></li>`).join("");
   $("p4pNote").textContent = `${DATA.p4p.source} ${fmtDate(DATA.p4p.date)}版。${DATA.p4p.note || ""}赤い点は日本人選手。`;
 }
 function renderRank() {
@@ -1252,7 +1266,7 @@ function renderJapan() {
     <div class="rg-sub"><b>UPCOMING</b><span>日本人の試合予定</span></div>
     <ul class="sched">${jpFights.map(s => schedItem(s)).join("") || `<li class="fx-none">決まっている試合はまだありません。</li>`}</ul>
     <div class="rg-sub"><b>BY CLASS</b><span>階級別の日本人ランカー（重い順）</span></div>
-    <div class="jp-classes">${byClass.map(({ c, list }) => `<div class="jp-cls"><h3>${esc(c.n)}<small>${list.length}人</small></h3>
+    <div class="jp-classes">${byClass.map(({ c, list }) => `<div class="jp-cls"><h3>${clsA(c.id, c.n)}<small>${list.length}人</small></h3>
       <ul>${list.map(({ n, rs }) => `<li><a href="#${pidOf(n)}">${esc(n)}</a><span>${rs.map(r => `<i class="${r.pos.includes("王者") ? "ch" : ""}">${r.src} ${esc(r.pos.replace("位", ""))}</i>`).join("")}</span></li>`).join("")}</ul></div>`).join("")}</div>`;
   renderPolls();
 }
@@ -1263,7 +1277,7 @@ function renderSchedule() {
   upcoming().forEach(s => { const k = s.d.slice(0, 7); (groups[k] = groups[k] || []).push(s); });
   $("schedList").innerHTML = Object.keys(groups).map(k => `<h3 class="sc-month">${k.slice(0, 4)}年${Number(k.slice(5, 7))}月</h3><ul class="sched">${groups[k].map(s => schedItem(s)).join("")}</ul>`).join("");
   const TAG = { "結果": "res", "次戦": "nx", "P4P": "rk" };
-  $("newsList").innerHTML = DATA.news.map(n => `<li><div class="fm"><span class="fd">${fmtDate(n.d).slice(5)}</span><span class="ft ${TAG[n.tag] || "nx"}">${esc(n.tag)}</span></div><p>${esc(n.x)}</p></li>`).join("");
+  $("newsList").innerHTML = DATA.news.map(n => `<li><div class="fm"><span class="fd">${fmtDate(n.d).slice(5)}</span><span class="ft ${TAG[n.tag] || "nx"}">${esc(n.tag)}</span></div><p>${linkCls(n.x)}</p></li>`).join("");
   renderPolls();
 }
 
@@ -1283,9 +1297,15 @@ function route() {
   let h = location.hash.slice(1) || "home", target = null;
   if (h === "p4p") { h = "rankings"; target = "p4pBlock"; }
   if (h === "news") { h = "schedule"; target = "newsBlock"; }
+  let title = "リングサイド・ノート";
+  if (h.startsWith("r-")) {
+    const c = DATA.rankings.classes.find(x => x.id === h.slice(2));
+    if (c) { st.cls = c.id; renderRank(); target = "rgCard"; title = `${c.n}のランキング | リングサイド・ノート`; }
+    h = "rankings";
+  }
   if (h.startsWith("p-")) { renderPlayer(h); h = "player"; }
   else if (h.startsWith("vs-")) { renderCompare(h); h = "compare"; }
-  else document.title = "リングサイド・ノート";
+  else document.title = title;
   if (!VIEWS.includes(h)) h = "home";
   if (h === "fighters" && pendingScroll) { target = pendingScroll; pendingScroll = null; }
   viewEls.forEach(el => { el.hidden = el.dataset.view !== h; });
@@ -1307,6 +1327,7 @@ Promise.all([getJSON("data.json"), getJSON("fighters.json").catch(() => ({ fight
       c.b[bd][1].split("|").forEach((s, i) => addRank(s, bd, c, `${i + 1}位`));
     });
   });
+  buildClsIndex();
   PID2NAME = new Map([...new Set([...PEOPLE.keys(), ...Object.keys(DETAIL)])].map(n => [pidOf(n), n]));
   DATA.p4p.list.forEach(p => P4P.set(p.name, p.n));
   renderFooter(); renderHome(); renderFxList(); renderCompareForm(); renderFeatured();
