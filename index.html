@@ -479,6 +479,19 @@ section[data-view]:not(.hero) > .sh:first-child { margin-top: 24px; }
 .rg-intro { margin: -4px 0 14px; font-size: 13.5px; color: #c4c8d4; line-height: 1.7; }
 .rg-intro b { color: #f6cf62; }
 .rg-intro span { color: #e8d9b0; font-weight: 700; }
+.rg-about { margin: -4px 0 16px; background: var(--panel); border: 1px solid rgba(243,195,79,.28); border-radius: 6px; overflow: hidden; }
+.rg-about summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 700; color: #e8d9b0; background: radial-gradient(120% 140% at 100% 0%, rgba(243,195,79,.12), transparent 60%), var(--panel-2); }
+.rg-about summary::-webkit-details-marker { display: none; }
+.rg-about summary b { color: #f6cf62; margin-right: 2px; }
+.rg-about summary::after { content: "＋"; color: var(--gold); font-weight: 700; flex: none; }
+.rg-about[open] summary::after { content: "－"; }
+.rg-about summary:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.rg-about-b { padding: 4px 14px 14px; font-size: 13.5px; line-height: 1.75; color: #c4c8d4; }
+.rg-about-b p { margin: 10px 0 0; }
+.rg-about-b dl { margin: 12px 0 0; display: grid; gap: 10px; }
+.rg-about-b dt { font-weight: 700; color: #f6cf62; font-size: 13px; }
+.rg-about-b dd { margin: 2px 0 0; }
+.rg-about-b a { display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 700; color: var(--gold); }
 .rg-king { position: relative; padding: 18px 16px 16px; display: grid; gap: 2px; border-top: 1px solid rgba(243,195,79,.35); background: radial-gradient(90% 140% at 0% 0%, rgba(243,195,79,.28), transparent 60%), linear-gradient(90deg, rgba(243,195,79,.12), transparent 80%); }
 .rg-kl { font-family: var(--f-tag); font-style: italic; font-weight: 700; font-size: 12px; letter-spacing: .22em; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .rg-king b { font-family: var(--f-serif); font-weight: 800; font-size: 28px; line-height: 1.3; }
@@ -680,6 +693,25 @@ i.tv.none { color: var(--muted); border-color: var(--line); background: none; }
   <section id="rankings" class="pad" data-view="rankings" aria-labelledby="h-r">
     <div class="sh"><b id="h-r">RANKINGS</b><span>階級別ランキング</span></div>
     <p class="rg-intro">メインは独立機関<b>TBRB</b>の統一ランキング。団体の事情に左右されない「その階級で本当に強い順」です。4団体のベルトと団体別の順位はその下で見られます。<span id="rgKings"></span></p>
+    <details class="rg-about">
+      <summary><b>TBRB</b>ってなに？</summary>
+      <div class="rg-about-b">
+        <p>正式名は Transnational Boxing Rankings Board（トランスナショナル・ボクシング・ランキング・ボード）。2012年10月にできた独立の組織で、世界22か国のボクシング記者や記録の専門家およそ50人が、ボランティアで各階級のトップ10を決めています。</p>
+        <dl>
+          <dt>なぜ信頼される？</dt>
+          <dd>WBA・WBC・IBF・WBOのように試合を認定する団体ではないので、承認料もプロモーターとの利害もありません。ベルトの数ではなく、誰に勝ってきたかで順位が決まります。</dd>
+          <dt>王者の決め方</dt>
+          <dd>1階級に王者は1人だけ。原則として1位と2位が直接戦い、その勝者が王者になります。ベルトを持っているだけでは王者と認められず、条件を満たす試合がなければ「空位」のままです。</dd>
+          <dt>王座を外れるとき</dt>
+          <dd>負けたとき、階級を変えたとき、引退したとき、長く試合をしないときです。</dd>
+          <dt>4団体の順位との違い</dt>
+          <dd>団体の順位は「次に誰が挑戦できるか」の目安で、指名試合や休養王者など団体の事情も入ります。TBRBは「いま本当に強い順」なので、このサイトではTBRBをメインにしています。</dd>
+          <dt>できたきっかけ</dt>
+          <dd>2012年、リング誌が王者を認める方針を変えたことに反対して、同誌のランキング委員を辞めた記者たちが立ち上げました。</dd>
+        </dl>
+        <a href="https://tbrb.org/" target="_blank" rel="noopener">TBRB公式サイト（英語）→</a>
+      </div>
+    </details>
     <div class="rg-cls" id="rgCls" role="group" aria-label="階級を選ぶ"></div>
     <article class="rg-card" id="rgCard" aria-live="polite"></article>
 
